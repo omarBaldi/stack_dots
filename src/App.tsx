@@ -74,8 +74,45 @@ function App() {
     drawingAreaRef.current?.appendChild(circleElement);
   }, [coordinates.added]);
 
+  useEffect(() => {
+    const circlesElements: Element[] = [
+      ...(drawingAreaRef.current?.children ?? []),
+    ];
+    const lastCircleElement: Element | undefined = circlesElements.at(-1);
+
+    if (typeof lastCircleElement === 'undefined') return;
+
+    //* otherwise remove last element from the DOM
+    lastCircleElement.remove();
+  }, [coordinates.removed]);
+
+  const removeLastCircleDrawn = (): void => {
+    setCoordinates((prevCoordinates) => {
+      const lastCoordinatedAdded: CoordinateType | undefined =
+        prevCoordinates.added.pop();
+
+      if (typeof lastCoordinatedAdded === 'undefined') {
+        return prevCoordinates;
+      }
+
+      return {
+        added: prevCoordinates.added,
+        removed: [...prevCoordinates.removed, lastCoordinatedAdded],
+      };
+    });
+  };
+
   return (
     <div className='App'>
+      <div>
+        <button
+          disabled={coordinates.added.length <= 0}
+          onClick={removeLastCircleDrawn}
+        >
+          Undo
+        </button>
+        <button>Redo</button>
+      </div>
       <div
         className='drawing__area'
         ref={drawingAreaRef}
