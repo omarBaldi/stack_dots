@@ -98,6 +98,8 @@ function App() {
     lastCircleElement.remove();
   }, [coordinates.removed]);
 
+  //? possibility to create a function as the "removeLastCircleDrawn"
+  //? and "addLastRemovedCoordinates" share the same logic
   const removeLastCircleDrawn = (): void => {
     setCoordinates((prevCoordinates) => {
       //* using pop method will remove the coordinates
@@ -117,6 +119,25 @@ function App() {
     });
   };
 
+  //? see comment left at line 101
+  const addLastRemovedCoordinates = (): void => {
+    setCoordinates((prevCoordinates) => {
+      const lastRemovedCoordinates: CoordinateType | undefined =
+        prevCoordinates.removed.pop();
+
+      if (typeof lastRemovedCoordinates == 'undefined') {
+        return prevCoordinates;
+      }
+
+      return {
+        added: [...prevCoordinates.added, lastRemovedCoordinates],
+        removed: prevCoordinates.removed,
+      };
+    });
+  };
+
+  //? create button component
+
   return (
     <div className='App'>
       <div>
@@ -126,7 +147,12 @@ function App() {
         >
           Undo
         </button>
-        <button>Redo</button>
+        <button
+          disabled={coordinates.removed.length <= 0}
+          onClick={addLastRemovedCoordinates}
+        >
+          Redo
+        </button>
       </div>
       <div
         className='drawing__area'
