@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 /**
@@ -98,42 +98,50 @@ function App() {
     lastCircleElement.remove();
   }, [coordinates.removed]);
 
-  //? possibility to create a function as the "removeLastCircleDrawn"
-  //? and "addLastRemovedCoordinates" share the same logic
-  const removeLastCircleDrawn = (): void => {
+  /**
+   *
+   * @param {string} action
+   * @desc remove_last_added ---> UNDO
+   * @desc add_last_removed ---> REDO
+   */
+  const updateCoordinatesBasedOnAction = ({
+    action,
+  }: {
+    action: 'remove_last_added' | 'add_last_removed';
+  }) => {
     setCoordinates((prevCoordinates) => {
       //* using pop method will remove the coordinates
       //* previosuly added without changing the reference
       //* to the array and trigger the "useEffect update"
-      const lastCoordinatedAdded: CoordinateType | undefined =
-        prevCoordinates.added.pop();
+      const lastCoordinates: CoordinateType | undefined = (
+        action === 'remove_last_added'
+          ? prevCoordinates.added
+          : prevCoordinates.removed
+      ).pop();
 
-      if (typeof lastCoordinatedAdded === 'undefined') {
+      if (typeof lastCoordinates === 'undefined') {
         return prevCoordinates;
       }
 
       return {
-        added: prevCoordinates.added,
-        removed: [...prevCoordinates.removed, lastCoordinatedAdded],
+        ...prevCoordinates,
+        ...(action === 'remove_last_added'
+          ? {
+              removed: [...prevCoordinates.removed, lastCoordinates],
+            }
+          : {
+              added: [...prevCoordinates.added, lastCoordinates],
+            }),
       };
     });
   };
 
-  //? see comment left at line 101
+  const removeLastCircleDrawn = (): void => {
+    updateCoordinatesBasedOnAction({ action: 'remove_last_added' });
+  };
+
   const addLastRemovedCoordinates = (): void => {
-    setCoordinates((prevCoordinates) => {
-      const lastRemovedCoordinates: CoordinateType | undefined =
-        prevCoordinates.removed.pop();
-
-      if (typeof lastRemovedCoordinates == 'undefined') {
-        return prevCoordinates;
-      }
-
-      return {
-        added: [...prevCoordinates.added, lastRemovedCoordinates],
-        removed: prevCoordinates.removed,
-      };
-    });
+    updateCoordinatesBasedOnAction({ action: 'add_last_removed' });
   };
 
   //? create button component
