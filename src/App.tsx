@@ -35,7 +35,7 @@ function App() {
   });
 
   useEffect(() => {
-    const drawCircle = ({ x, y }: MouseEvent) => {
+    const addNewCoordinates = ({ x, y }: MouseEvent) => {
       const newCoordinates = {
         x,
         y,
@@ -47,12 +47,29 @@ function App() {
       }));
     };
 
-    drawingAreaRef.current?.addEventListener('click', drawCircle);
+    drawingAreaRef.current?.addEventListener('click', addNewCoordinates);
 
     return () => {
-      drawingAreaRef.current?.removeEventListener('click', drawCircle);
+      /* Cleanup */
+      drawingAreaRef.current?.removeEventListener('click', addNewCoordinates);
+      setCoordinates({ added: [], removed: [] });
     };
   }, []);
+
+  const createCircleElement = ({
+    x,
+    y,
+  }: {
+    x: number;
+    y: number;
+  }): HTMLDivElement => {
+    const circleElement = document.createElement('div');
+    circleElement.className = 'circle__area';
+    circleElement.style.top = `${y}px`;
+    circleElement.style.left = `${x}px`;
+
+    return circleElement;
+  };
 
   /**
    * * as soon as the array of coordinates added changes
@@ -60,18 +77,14 @@ function App() {
    * * to add a new circle
    */
   useEffect(() => {
+    //* get the last coordinated added in array
     const lastCoordinatesAdded = coordinates.added.at(-1);
     if (typeof lastCoordinatesAdded === 'undefined') return;
 
-    const { x, y } = lastCoordinatesAdded;
-
     //* if not undefined, then draw a circle element based on those
-    const circleElement = document.createElement('div');
-    circleElement.className = 'circle__area';
-    circleElement.style.top = `${y}px`;
-    circleElement.style.left = `${x}px`;
+    const newCircle = createCircleElement({ ...lastCoordinatesAdded });
 
-    drawingAreaRef.current?.appendChild(circleElement);
+    drawingAreaRef.current?.appendChild(newCircle);
   }, [coordinates.added]);
 
   useEffect(() => {
@@ -79,7 +92,6 @@ function App() {
       ...(drawingAreaRef.current?.children ?? []),
     ];
     const lastCircleElement: Element | undefined = circlesElements.at(-1);
-
     if (typeof lastCircleElement === 'undefined') return;
 
     //* otherwise remove last element from the DOM
@@ -88,6 +100,9 @@ function App() {
 
   const removeLastCircleDrawn = (): void => {
     setCoordinates((prevCoordinates) => {
+      //* using pop method will remove the coordinates
+      //* previosuly added without changing the reference
+      //* to the array and trigger the "useEffect update"
       const lastCoordinatedAdded: CoordinateType | undefined =
         prevCoordinates.added.pop();
 
